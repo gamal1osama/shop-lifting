@@ -1,0 +1,76 @@
+{% extends 'video_classifier/base.html' %}
+
+{% block title %}Analysis Result{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h4>Video Analysis Result</h4>
+            </div>
+            <div class="card-body">
+                <div id="status-container">
+                    {% if video.prediction == 'processing' %}
+                        <div class="text-center">
+                            <div class="spinner-border text-primary" role="status">
+                                <span class="visually-hidden">Processing...</span>
+                            </div>
+                            <p class="mt-2">Processing video... Please wait.</p>
+                        </div>
+                    {% elif video.prediction == 'error' %}
+                        <div class="alert alert-danger">
+                            <h5>Error Processing Video</h5>
+                            <p>{{ video.error_message }}</p>
+                        </div>
+                    {% else %}
+                        <div class="alert {% if video.prediction == 'shoplifter' %}alert-danger{% else %}alert-success{% endif %}">
+                            <h5>Analysis Complete</h5>
+                            <p><strong>Prediction:</strong> 
+                                {% if video.prediction == 'shoplifter' %}
+                                    Potential Shoplifting Detected
+                                {% else %}
+                                    Normal Behavior
+                                {% endif %}
+                            </p>
+                            <p><strong>Confidence:</strong> {{ video.confidence|floatformat:2 }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+
+                <div class="mt-3">
+                    <h6>Video Information:</h6>
+                    <p><strong>Uploaded:</strong> {{ video.uploaded_at }}</p>
+                    {% if video.processed_at %}
+                        <p><strong>Processed:</strong> {{ video.processed_at }}</p>
+                    {% endif %}
+                </div>
+
+                <div class="mt-3">
+                    <a href="{% url 'upload_video' %}" class="btn btn-primary">Upload Another Video</a>
+                    <a href="{% url 'video_list' %}" class="btn btn-secondary">View History</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% if video.prediction == 'processing' %}
+<script>
+function checkStatus() {
+    fetch('{% url "check_status" video.id %}')
+        .then(response => response.json())
+        .then(data => {
+            if (data.status !== 'processing') {
+                location.reload();
+            }
+        });
+}
+
+// Check status every 3 seconds
+setInterval(checkStatus, 3000);
+</script>
+{% endif %}
+{% endblock %}

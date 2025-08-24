@@ -1,0 +1,69 @@
+{% extends 'video_classifier/base.html' %}
+
+{% block title %}Video History{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h4>Video Analysis History</h4>
+            </div>
+            <div class="card-body">
+                {% if videos %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>Uploaded</th>
+                                    <th>Status</th>
+                                    <th>Prediction</th>
+                                    <th>Confidence</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for video in videos %}
+                                <tr>
+                                    <td>{{ video.uploaded_at|date:"M d, Y H:i" }}</td>
+                                    <td>
+                                        <span class="badge 
+                                            {% if video.prediction == 'processing' %}bg-warning
+                                            {% elif video.prediction == 'error' %}bg-danger
+                                            {% elif video.prediction == 'shoplifter' %}bg-danger
+                                            {% else %}bg-success{% endif %}">
+                                            {{ video.get_prediction_display }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        {% if video.prediction == 'shoplifter' %}
+                                            Potential Shoplifting
+                                        {% elif video.prediction == 'non_shoplifter' %}
+                                            Normal Behavior
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if video.confidence %}
+                                            {{ video.confidence|floatformat:2 }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{% url 'video_result' video.id %}" class="btn btn-sm btn-outline-primary">View Details</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p>No videos uploaded yet. <a href="{% url 'upload_video' %}">Upload your first video</a>.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
