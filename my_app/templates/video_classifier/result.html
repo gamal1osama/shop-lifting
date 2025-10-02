@@ -1,55 +1,317 @@
 {% extends 'video_classifier/base.html' %}
 
-{% block title %}Analysis Result{% endblock %}
+{% block title %}Analysis Result - AI Security Monitor{% endblock %}
+
+{% block extra_css %}
+<style>
+    .result-container {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .result-card {
+        background: rgba(30, 41, 59, 0.8);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
+
+    .result-header {
+        padding: 2rem;
+        text-align: center;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+
+    .result-header h2 {
+        color: white;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .result-body {
+        padding: 3rem;
+    }
+
+    .status-container {
+        text-align: center;
+        padding: 2rem;
+        border-radius: 16px;
+        margin-bottom: 2rem;
+    }
+
+    .processing-status {
+        background: rgba(99, 102, 241, 0.1);
+        border: 2px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .success-status {
+        background: rgba(16, 185, 129, 0.1);
+        border: 2px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .danger-status {
+        background: rgba(239, 68, 68, 0.1);
+        border: 2px solid rgba(239, 68, 68, 0.3);
+    }
+
+    .error-status {
+        background: rgba(251, 191, 36, 0.1);
+        border: 2px solid rgba(251, 191, 36, 0.3);
+    }
+
+    .status-icon {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+    }
+
+    .processing-status .status-icon {
+        color: var(--primary-color);
+        animation: pulse 2s ease-in-out infinite;
+    }
+
+    .success-status .status-icon {
+        color: var(--success-color);
+    }
+
+    .danger-status .status-icon {
+        color: var(--danger-color);
+    }
+
+    .error-status .status-icon {
+        color: #fbbf24;
+    }
+
+    @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+
+    .status-title {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        color: var(--text-light);
+    }
+
+    .status-message {
+        font-size: 1.1rem;
+        color: var(--text-muted);
+    }
+
+    .confidence-meter {
+        margin: 2rem 0;
+        padding: 1.5rem;
+        background: rgba(99, 102, 241, 0.05);
+        border-radius: 12px;
+    }
+
+    .confidence-label {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        color: var(--text-light);
+        font-weight: 600;
+    }
+
+    .confidence-bar {
+        height: 12px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 6px;
+        overflow: hidden;
+    }
+
+    .confidence-fill {
+        height: 100%;
+        border-radius: 6px;
+        transition: width 1s ease;
+    }
+
+    .confidence-fill.high {
+        background: linear-gradient(90deg, #ef4444, #dc2626);
+    }
+
+    .confidence-fill.low {
+        background: linear-gradient(90deg, #10b981, #059669);
+    }
+
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin: 2rem 0;
+    }
+
+    .info-item {
+        padding: 1.5rem;
+        background: rgba(99, 102, 241, 0.05);
+        border-radius: 12px;
+        border-left: 4px solid var(--primary-color);
+    }
+
+    .info-label {
+        color: var(--text-muted);
+        font-size: 0.9rem;
+        margin-bottom: 0.5rem;
+    }
+
+    .info-value {
+        color: var(--text-light);
+        font-size: 1.1rem;
+        font-weight: 600;
+    }
+
+    .action-buttons {
+        display: flex;
+        gap: 1rem;
+        justify-content: center;
+        margin-top: 2rem;
+        flex-wrap: wrap;
+    }
+
+    .btn-custom {
+        padding: 0.8rem 2rem;
+        border-radius: 12px;
+        font-weight: 600;
+        border: none;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .btn-primary-custom {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+    }
+
+    .btn-primary-custom:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 30px rgba(99, 102, 241, 0.4);
+        color: white;
+    }
+
+    .btn-secondary-custom {
+        background: rgba(148, 163, 184, 0.2);
+        color: var(--text-light);
+    }
+
+    .btn-secondary-custom:hover {
+        background: rgba(148, 163, 184, 0.3);
+        transform: translateY(-2px);
+        color: var(--text-light);
+    }
+
+    .spinner-large {
+        border: 4px solid rgba(99, 102, 241, 0.3);
+        border-top: 4px solid var(--primary-color);
+        border-radius: 50%;
+        width: 60px;
+        height: 60px;
+        animation: spin 1s linear infinite;
+        margin: 0 auto 1rem;
+    }
+
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row justify-content-center">
-    <div class="col-md-8">
-        <div class="card">
-            <div class="card-header">
-                <h4>Video Analysis Result</h4>
+<div class="result-container fade-in">
+    <div class="result-card">
+        <div class="result-header">
+            <h2><i class="fas fa-chart-line me-2"></i>Analysis Results</h2>
+        </div>
+        <div class="result-body">
+            {% if video.prediction == 'processing' %}
+                <div class="status-container processing-status">
+                    <div class="spinner-large"></div>
+                    <div class="status-title">Processing Video</div>
+                    <div class="status-message">Our AI is analyzing your footage. This may take a few moments...</div>
+                </div>
+            
+            {% elif video.prediction == 'error' %}
+                <div class="status-container error-status">
+                    <i class="fas fa-exclamation-triangle status-icon"></i>
+                    <div class="status-title">Processing Error</div>
+                    <div class="status-message">{{ video.error_message }}</div>
+                </div>
+            
+            {% elif video.prediction == 'shoplifter' %}
+                <div class="status-container danger-status">
+                    <i class="fas fa-exclamation-circle status-icon"></i>
+                    <div class="status-title">⚠️ Alert: Potential Shoplifting Detected</div>
+                    <div class="status-message">Suspicious behavior patterns identified in the video</div>
+                </div>
+
+                <div class="confidence-meter">
+                    <div class="confidence-label">
+                        <span>Confidence Level</span>
+                        <span>{{ video.confidence|floatformat:1 }}%</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill high" style="width: {{ video.confidence }}%"></div>
+                    </div>
+                </div>
+            
+            {% elif video.prediction == 'non_shoplifter' %}
+                <div class="status-container success-status">
+                    <i class="fas fa-check-circle status-icon"></i>
+                    <div class="status-title">✓ Normal Behavior Detected</div>
+                    <div class="status-message">No suspicious activity identified in the video</div>
+                </div>
+
+                <div class="confidence-meter">
+                    <div class="confidence-label">
+                        <span>Confidence Level</span>
+                        <span>{{ video.confidence|floatformat:1 }}%</span>
+                    </div>
+                    <div class="confidence-bar">
+                        <div class="confidence-fill low" style="width: {{ video.confidence }}%"></div>
+                    </div>
+                </div>
+            {% endif %}
+
+            <div class="info-grid">
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-calendar me-2"></i>Upload Time
+                    </div>
+                    <div class="info-value">{{ video.uploaded_at|date:"M d, Y H:i" }}</div>
+                </div>
+                
+                {% if video.processed_at %}
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-clock me-2"></i>Processed Time
+                    </div>
+                    <div class="info-value">{{ video.processed_at|date:"M d, Y H:i" }}</div>
+                </div>
+                {% endif %}
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="fas fa-tag me-2"></i>Video ID
+                    </div>
+                    <div class="info-value">{{ video.id|truncatechars:15 }}</div>
+                </div>
             </div>
-            <div class="card-body">
-                <div id="status-container">
-                    {% if video.prediction == 'processing' %}
-                        <div class="text-center">
-                            <div class="spinner-border text-primary" role="status">
-                                <span class="visually-hidden">Processing...</span>
-                            </div>
-                            <p class="mt-2">Processing video... Please wait.</p>
-                        </div>
-                    {% elif video.prediction == 'error' %}
-                        <div class="alert alert-danger">
-                            <h5>Error Processing Video</h5>
-                            <p>{{ video.error_message }}</p>
-                        </div>
-                    {% else %}
-                        <div class="alert {% if video.prediction == 'shoplifter' %}alert-danger{% else %}alert-success{% endif %}">
-                            <h5>Analysis Complete</h5>
-                            <p><strong>Prediction:</strong> 
-                                {% if video.prediction == 'shoplifter' %}
-                                    Potential Shoplifting Detected
-                                {% else %}
-                                    Normal Behavior
-                                {% endif %}
-                            </p>
-                            <p><strong>Confidence:</strong> {{ video.confidence|floatformat:2 }}</p>
-                        </div>
-                    {% endif %}
-                </div>
 
-                <div class="mt-3">
-                    <h6>Video Information:</h6>
-                    <p><strong>Uploaded:</strong> {{ video.uploaded_at }}</p>
-                    {% if video.processed_at %}
-                        <p><strong>Processed:</strong> {{ video.processed_at }}</p>
-                    {% endif %}
-                </div>
-
-                <div class="mt-3">
-                    <a href="{% url 'upload_video' %}" class="btn btn-primary">Upload Another Video</a>
-                    <a href="{% url 'video_list' %}" class="btn btn-secondary">View History</a>
-                </div>
+            <div class="action-buttons">
+                <a href="{% url 'upload_video' %}" class="btn-custom btn-primary-custom">
+                    <i class="fas fa-upload"></i>
+                    Upload Another Video
+                </a>
+                <a href="{% url 'video_list' %}" class="btn-custom btn-secondary-custom">
+                    <i class="fas fa-history"></i>
+                    View History
+                </a>
             </div>
         </div>
     </div>
@@ -66,10 +328,10 @@ function checkStatus() {
             if (data.status !== 'processing') {
                 location.reload();
             }
-        });
+        })
+        .catch(error => console.error('Error:', error));
 }
 
-// Check status every 3 seconds
 setInterval(checkStatus, 3000);
 </script>
 {% endif %}

@@ -1,68 +1,280 @@
 {% extends 'video_classifier/base.html' %}
 
-{% block title %}Video History{% endblock %}
+{% block title %}Video History - AI Security Monitor{% endblock %}
+
+{% block extra_css %}
+<style>
+    .history-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .history-card {
+        background: rgba(30, 41, 59, 0.8);
+        backdrop-filter: blur(20px);
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
+
+    .history-header {
+        padding: 2rem;
+        text-align: center;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+
+    .history-header h2 {
+        color: white;
+        font-weight: 700;
+        margin: 0;
+    }
+
+    .history-body {
+        padding: 2rem;
+    }
+
+    .table-container {
+        overflow-x: auto;
+        border-radius: 12px;
+    }
+
+    .custom-table {
+        width: 100%;
+        border-collapse: separate;
+        border-spacing: 0;
+    }
+
+    .custom-table thead {
+        background: rgba(99, 102, 241, 0.1);
+    }
+
+    .custom-table th {
+        padding: 1rem;
+        text-align: left;
+        color: var(--text-light);
+        font-weight: 600;
+        border-bottom: 2px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .custom-table tbody tr {
+        background: rgba(30, 41, 59, 0.5);
+        transition: all 0.3s ease;
+    }
+
+    .custom-table tbody tr:hover {
+        background: rgba(99, 102, 241, 0.1);
+        transform: scale(1.01);
+    }
+
+    .custom-table td {
+        padding: 1rem;
+        color: var(--text-muted);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 0.4rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+    }
+
+    .badge-processing {
+        background: rgba(99, 102, 241, 0.2);
+        color: #a5b4fc;
+        border: 1px solid rgba(99, 102, 241, 0.4);
+    }
+
+    .badge-shoplifter {
+        background: rgba(239, 68, 68, 0.2);
+        color: #fca5a5;
+        border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    .badge-non-shoplifter {
+        background: rgba(16, 185, 129, 0.2);
+        color: #6ee7b7;
+        border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .badge-error {
+        background: rgba(251, 191, 36, 0.2);
+        color: #fcd34d;
+        border: 1px solid rgba(251, 191, 36, 0.4);
+    }
+
+    .confidence-display {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .confidence-mini-bar {
+        width: 60px;
+        height: 6px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .confidence-mini-fill {
+        height: 100%;
+        background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+        border-radius: 3px;
+    }
+
+    .action-btn {
+        padding: 0.5rem 1rem;
+        border-radius: 8px;
+        border: none;
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+        color: white;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(99, 102, 241, 0.4);
+        color: white;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 4rem 2rem;
+    }
+
+    .empty-icon {
+        font-size: 5rem;
+        color: var(--text-muted);
+        margin-bottom: 1.5rem;
+        opacity: 0.5;
+    }
+
+    .empty-title {
+        font-size: 1.5rem;
+        color: var(--text-light);
+        margin-bottom: 1rem;
+    }
+
+    .empty-message {
+        color: var(--text-muted);
+        margin-bottom: 2rem;
+    }
+
+    @media (max-width: 768px) {
+        .custom-table {
+            font-size: 0.9rem;
+        }
+
+        .custom-table th,
+        .custom-table td {
+            padding: 0.75rem 0.5rem;
+        }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="row">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <h4>Video Analysis History</h4>
-            </div>
-            <div class="card-body">
-                {% if videos %}
-                    <div class="table-responsive">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Uploaded</th>
-                                    <th>Status</th>
-                                    <th>Prediction</th>
-                                    <th>Confidence</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for video in videos %}
-                                <tr>
-                                    <td>{{ video.uploaded_at|date:"M d, Y H:i" }}</td>
-                                    <td>
-                                        <span class="badge 
-                                            {% if video.prediction == 'processing' %}bg-warning
-                                            {% elif video.prediction == 'error' %}bg-danger
-                                            {% elif video.prediction == 'shoplifter' %}bg-danger
-                                            {% else %}bg-success{% endif %}">
-                                            {{ video.get_prediction_display }}
+<div class="history-container fade-in">
+    <div class="history-card">
+        <div class="history-header">
+            <h2><i class="fas fa-history me-2"></i>Analysis History</h2>
+        </div>
+        <div class="history-body">
+            {% if videos %}
+                <div class="table-container">
+                    <table class="custom-table">
+                        <thead>
+                            <tr>
+                                <th><i class="fas fa-calendar me-2"></i>Date</th>
+                                <th><i class="fas fa-info-circle me-2"></i>Status</th>
+                                <th><i class="fas fa-brain me-2"></i>Prediction</th>
+                                <th><i class="fas fa-percentage me-2"></i>Confidence</th>
+                                <th><i class="fas fa-cog me-2"></i>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for video in videos %}
+                            <tr>
+                                <td>
+                                    <div style="color: var(--text-light); font-weight: 500;">
+                                        {{ video.uploaded_at|date:"M d, Y" }}
+                                    </div>
+                                    <div style="font-size: 0.85rem; color: var(--text-muted);">
+                                        {{ video.uploaded_at|date:"H:i" }}
+                                    </div>
+                                </td>
+                                <td>
+                                    {% if video.prediction == 'processing' %}
+                                        <span class="status-badge badge-processing">
+                                            <i class="fas fa-spinner fa-spin me-1"></i>Processing
                                         </span>
-                                    </td>
-                                    <td>
-                                        {% if video.prediction == 'shoplifter' %}
-                                            Potential Shoplifting
-                                        {% elif video.prediction == 'non_shoplifter' %}
-                                            Normal Behavior
-                                        {% else %}
-                                            -
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        {% if video.confidence %}
-                                            {{ video.confidence|floatformat:2 }}
-                                        {% else %}
-                                            -
-                                        {% endif %}
-                                    </td>
-                                    <td>
-                                        <a href="{% url 'video_result' video.id %}" class="btn btn-sm btn-outline-primary">View Details</a>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                    </div>
-                {% else %}
-                    <p>No videos uploaded yet. <a href="{% url 'upload_video' %}">Upload your first video</a>.</p>
-                {% endif %}
-            </div>
+                                    {% elif video.prediction == 'error' %}
+                                        <span class="status-badge badge-error">
+                                            <i class="fas fa-exclamation-triangle me-1"></i>Error
+                                        </span>
+                                    {% elif video.prediction == 'shoplifter' %}
+                                        <span class="status-badge badge-shoplifter">
+                                            <i class="fas fa-exclamation-circle me-1"></i>Alert
+                                        </span>
+                                    {% else %}
+                                        <span class="status-badge badge-non-shoplifter">
+                                            <i class="fas fa-check-circle me-1"></i>Clear
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if video.prediction == 'shoplifter' %}
+                                        <span style="color: #fca5a5;">Potential Shoplifting</span>
+                                    {% elif video.prediction == 'non_shoplifter' %}
+                                        <span style="color: #6ee7b7;">Normal Behavior</span>
+                                    {% elif video.prediction == 'processing' %}
+                                        <span style="color: var(--text-muted);">Analyzing...</span>
+                                    {% else %}
+                                        <span style="color: var(--text-muted);">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if video.confidence %}
+                                        <div class="confidence-display">
+                                            <span style="color: var(--text-light); font-weight: 500;">
+                                                {{ video.confidence|floatformat:1 }}%
+                                            </span>
+                                            <div class="confidence-mini-bar">
+                                                <div class="confidence-mini-fill" style="width: {{ video.confidence }}%"></div>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <span style="color: var(--text-muted);">-</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <a href="{% url 'video_result' video.id %}" class="action-btn">
+                                        <i class="fas fa-eye me-1"></i>View
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% else %}
+                <div class="empty-state">
+                    <i class="fas fa-inbox empty-icon"></i>
+                    <div class="empty-title">No Videos Yet</div>
+                    <div class="empty-message">You haven't uploaded any videos for analysis yet.</div>
+                    <a href="{% url 'upload_video' %}" class="action-btn" style="padding: 0.8rem 2rem; font-size: 1.1rem;">
+                        <i class="fas fa-upload me-2"></i>Upload Your First Video
+                    </a>
+                </div>
+            {% endif %}
         </div>
     </div>
 </div>
