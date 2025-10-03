@@ -1,3 +1,18 @@
-*.mp4
-.vscode/
+# Python
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# VSCode
+.vscode/
+
+# Media files
+*.mp4
+
+# Django migrations
+*/migrations/
+
+# Environment
+.env
+venv/
