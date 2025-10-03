@@ -84,7 +84,7 @@ class VideoClassificationService:
             prediction = self.model.predict(video_batch, verbose=0)[0][0]  # Get scalar prediction
             
             # Convert prediction to label and confidence
-            confidence = float(prediction)
+            confidence = float(prediction) * 100
             is_shoplifter = prediction > 0.5
             prediction_label = 'shoplifter' if is_shoplifter else 'non_shoplifter'
             
