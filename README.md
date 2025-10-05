@@ -197,6 +197,7 @@ my_app/
 - TensorFlow 2.13.0
 - Django 4.2+
 - OpenCV
+- Git LFS (for downloading the trained model)
 - CUDA (optional, for GPU acceleration)
 
 ### Step 1: Clone Repository
@@ -204,7 +205,14 @@ my_app/
 ```bash
 git clone https://github.com/gamal1osama/shop-lifting.git
 cd shop-lifting
+
+# Install Git LFS (if not already installed)
+git lfs install
+
+# Pull the large model file
+git lfs pull
 ```
+Important: The trained model file is stored using Git Large File Storage (Git LFS). If you skip the git lfs pull command, you'll only have a small pointer file instead of the actual model, and the application won't work.
 
 ### Step 2: Create Virtual Environment
 
@@ -255,12 +263,36 @@ cd my_app
 python manage.py makemigrations
 python manage.py migrate
 
-# Copy trained model
-# Place best_model.keras in models_storage/
+# IMPORTANT: Install Git LFS to download the model file
+# The trained model is stored using Git Large File Storage (LFS)
+git lfs install
+git lfs pull
+
+# Verify the model file is downloaded (should be ~100MB+, not just a pointer file)
+ls -lh models_storage/model.keras
 
 # Run server
 python manage.py runserver
 ```
+Note about Git LFS:
+The trained model file (model.keras) is stored using Git Large File Storage due to its size. If you clone the repository without Git LFS installed, you'll only get a small pointer file instead of the actual model.
+
+#### To install Git LFS:
+```bash
+# Ubuntu/Debian
+sudo apt-get install git-lfs
+
+# macOS
+brew install git-lfs
+
+# Windows
+# Download from: https://git-lfs.github.com/
+
+# After installation, initialize LFS
+git lfs install
+git lfs pull
+```
+
 
 ### Step 7: Access Application
 
@@ -389,6 +421,7 @@ MODEL_PATH = 'models_storage/model.keras'
 - May require retraining for different retail environments
 - False positives can occur with unusual but legitimate behavior
 - Should be used as an assistance tool, not sole decision maker
+- Model file requires Git LFS: Ensure you've run git lfs pull to download the actual model file (not just the pointer)
 
 ### Best Practices
 
